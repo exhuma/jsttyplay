@@ -1,7 +1,37 @@
 // showtty.js - a building block for viewing tty animations
 // Copyright 2008 Jack Christopher Kastorff
+
+/**
+ *
+ * Note:
+ *  The original author (JCK) uses the term "table" quite often. Instead, I
+ *  will use the expression "Terminal View" in the comments as it better
+ *  reflects the concept.
+ *
+ */
+
 (function(){
 
+/**
+ * Foreground color map
+ */
+var clut = { 0: "#000", 1: "#D00", 2: "#0D0", 3: "#DD0", 4: "#00D", 5: "#D0D", 6: "#0DD", 7: "#DDD" };
+
+/**
+ * ? Seems to be unused
+ */
+var t = 0;
+
+/**
+ * Repeat a string n-times
+ *
+ * Takes a string as input, and returns a new string which consists of n-times
+ * the input string (all concatenated together with the empty string).
+ *
+ * @param str: The input string
+ * @param rep: How many times to repeat the string
+ * @return: The repeated string
+ */
 var repeatString = function (str, rep) {
     var outstr = '';
     for (var i = 0; i < rep; i++) {
@@ -10,6 +40,19 @@ var repeatString = function (str, rep) {
     return outstr;
 };
 
+/**
+ * Creates an array of PRE elements representing single terminal characters.
+ *
+ * These PRE elements are contained in a DIV element. The DIV element
+ * represents a terminal row. As such each DIV contains as many PREs as there
+ * are terminal columns.
+ *
+ * @param width: The number of terminal columns
+ * @param height: The number of terminal rows
+ * @return: An object with two members:
+ *      - arr: A two-dimensional array containing the PREs
+ *      - elem: the HTML DIV element with the PREs
+ */
 var makeTable = function (width, height) {
     var table = document.createElement("div");
     var arr = [];
@@ -41,33 +84,73 @@ var makeTable = function (width, height) {
     return { "arr": arr, "elem": table };
 };
 
+/**
+ * Sets a sequence of characters in a terminal view
+ *
+ * @param tb: The terminal view
+ * @param r: The characters to be put into the terminal
+ * @param index: The row index
+ * @param stx: The starting column
+ */
 var setTextChunk = function (tb, r, index, stx) {
     for (var i = 0; i < r.length; i++) {
         tb.arr[index][i+stx].firstChild.replaceData(0, 1, r.charAt(i));
     }
 };
 
+/**
+ * Sets the "bold" style for a character sequence.
+ *
+ * @param tb: The Terminal view
+ * @param r: A string representing the bold states (0 = normal, 1 = bold)
+ * @param index: The row index
+ * @param stx: The starting column
+ */
 var setBoldChunk = function (tb, r, index, stx) {
     for (var i = 0; i < r.length; i++) {
         tb.arr[index][i+stx].style.fontWeight = r.charAt(i) == 0 ? 'normal' : 'bold';
     }
 };
 
+/**
+ * Sets the "underline" style for a character sequence.
+ *
+ * @param tb: The Terminal view
+ * @param r: A string representing the underline states (0 = normal, 1 =
+ *           underlined)
+ * @param index: The row index
+ * @param stx: The starting column
+ */
 var setUnderlineChunk = function (tb, r, index, stx) {
     for (var i = 0; i < r.length; i++) {
         tb.arr[index][i+stx].style.textDecoration = r.charAt(i) == 0 ? 'none' : 'underline';
     }
 };
 
-var clut = { 0: "#000", 1: "#D00", 2: "#0D0", 3: "#DD0", 4: "#00D", 5: "#D0D", 6: "#0DD", 7: "#DDD" };
-
+/**
+ * Sets the "foreground-color" style for a character sequence.
+ *
+ * @param tb: The Terminal view
+ * @param r: A string representing the colors. Colors are mapped using the
+ *           global variable "clut"
+ * @param index: The row index
+ * @param stx: The starting column
+ */
 var setFcolorChunk = function (tb, r, index, stx) {
     for (var i = 0; i < r.length; i++) {
         tb.arr[index][i+stx].style.color = clut[r.charAt(i)];
     }
 };
 
-var t = 0;
+/**
+ * Sets the "background-color" style for a character sequence.
+ *
+ * @param tb: The Terminal view
+ * @param r: A string representing the colors. Colors are mapped using the
+ *           global variable "clut"
+ * @param index: The row index
+ * @param stx: The starting column
+ */
 var setBcolorChunk = function (tb, r, index, stx) {
     for (var i = 0; i < r.length; i++) {
         tb.arr[index][i+stx].style.backgroundColor = clut[r.charAt(i)];
@@ -222,7 +305,7 @@ var handleCursor = function (table, bgcache, curpos, dx, dy) {
     table.arr[curpos[1]-1][curpos[0]-1].style.backgroundColor = '#FFF';
 };
 
-var animateNextFrame = function (holder) { with (holder) {
+var animateNextFrame = function(holder) { with (holder) {
     var fr = timeline[nextframe];
     if ( fr.i ) {
         loadIFrame(table, rowcaches, fr, width, height);
@@ -242,7 +325,16 @@ var animateNextFrame = function (holder) { with (holder) {
     }
 }};
 
-var makeCache = function (ch, wid, hei) {
+/**
+ * Fills an array with default characters.
+ *
+ * @param ch: The fill character
+ * @param wid: The terminal width
+ * @param hei: The terminal height
+ * @return: An array of terminal rows. Each row is a simple string, filled
+ *          with the specified fill character <ch>
+ */
+var makeCache = function(ch, wid, hei) {
     var c = [];
     for (var y = 0; y < hei; y++) {
         c.push( repeatString(ch, wid) );
@@ -250,11 +342,20 @@ var makeCache = function (ch, wid, hei) {
     return c;
 };
 
+/**
+ * Load a TTY Session into an HTML elemen
+ *
+ * @param elem: The DOM node into which the session should be loaded
+ * @param data: The object which contains the the terminal session data (can
+ *              be loaded via showTTYURL)
+ */
 showTTY = function (elem, data) {
+
+    // make sure the element is empty
     while ( elem.firstChild ) {
         elem.removeChild( elem.firstChild );
     }
-    
+
     var width = data.width;
     var height = data.height;
     var timeline = data.timeline;
@@ -283,6 +384,14 @@ showTTY = function (elem, data) {
     animateNextFrame(holder);
 };
 
+/**
+ * Load the TTY session data from a remote URL.
+ *
+ * The URL will be fetched via XMLHttpRequest
+ *
+ * @param elem: The DOM node into which the session should be loaded
+ * @param url: The URL which contains the JSON data of the terminal session
+ */
 showTTYURL = function (elem, url) {
     var showText = function (text) {
         while ( elem.firstChild ) {
