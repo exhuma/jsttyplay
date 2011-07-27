@@ -20,7 +20,7 @@ var makeTable = function (width, height) {
         row.style.margin = '0';
         row.style.padding = '0';
         row.style.wordSpacing = '0';
-        row.style.height = '1.2em';
+        row.style.height = '1.0em';
         for (var i = 1; i <= width; i++) {
             var charelem = document.createElement("pre");
             charelem.style.backgroundColor = '#000';
