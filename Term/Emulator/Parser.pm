@@ -430,6 +430,8 @@ sub set_mode {
       or $mode eq "7"     # ???
       or $mode eq "6"     # ???
       or $mode eq "?25"   # ???
+      or $mode eq "?1049" # ???
+      or $mode eq "?12"   # ???
       ) {
         # ignore
 
@@ -474,6 +476,8 @@ sub reset_mode {
       or $mode eq "7"     # ???
       or $mode eq "6"     # ???
       or $mode eq "?25"   # ???
+      or $mode eq "?1049" # ???
+      or $mode eq "?12"   # ???
       ) {
         # ignore
 
